@@ -14,6 +14,10 @@ PAYLOAD_SCHEMA = Schema(dict(accountNumber=And(str, lambda s: len(s) == 8),
                              amount=And(int, lambda n: n > 0),
                              operation=lambda s: s in ['credit', 'debit']))
 
+LIMIT_SCHEMA = Schema(dict(accountNumber=And(str, lambda s: len(s) == 8),
+                           amount=And(int, lambda n: n < 501),
+                           operation=lambda s: s in ['debit']))
+
 
 @process.route('/create', methods=['POST'])
 def process_cashier_requests():
@@ -29,6 +33,15 @@ def process_cashier_requests():
     account_number = req_data['accountNumber']
     amount = req_data['amount']
     operation = req_data['operation']
+    if operation == 'debit' and amount > 500:
+        print("inside condition")
+        return jsonify(
+            id=operation_id,
+            accountNumber=account_number,
+            amount=amount,
+            status='ERROR',
+            operation=operation,
+            created=created), 400
 
     broker = current_app.broker
     broker.produce(dumps(dict(id=operation_id,

@@ -26,7 +26,7 @@ def broker():
 
 
 def test_should_produce_event(web_client, logger, broker):
-    payload = dict(accountNumber='12345678', amount=10815, operation='debit')
+    payload = dict(accountNumber='12345678', amount=108, operation='debit')
 
     web_client.post('/cashier/create', json=json.loads(json.dumps(payload)))
 
@@ -35,10 +35,27 @@ def test_should_produce_event(web_client, logger, broker):
     assert event is not None
     assert 'id' in event
     assert event['accountNumber'] == '12345678'
-    assert event['amount'] == 10815
+    assert event['amount'] == 108
     assert event['operation'] == 'debit'
     assert event['status'] == 'accepted'
     assert 'created' in event
+
+
+def test_withdraw_limit_exceed(web_client, logger, broker):
+    payload = dict(accountNumber='12345678', amount=501, operation='debit')
+
+    response = web_client.post('/cashier/create', json=json.loads(json.dumps(payload)))
+
+    event = response.get_json
+    print(event)
+
+    assert event is not None
+    assert 'id' in event
+    assert event['accountNumber'] == '12345678'
+    assert event['amount'] == 501
+    assert event['operation'] == 'debit'
+    assert event['status'] == 'accepted'
+    assert response.status_code == 400, response.status_code
 
 
 def test_should_process_client_request(web_client):

@@ -21,6 +21,17 @@ def assert_response(context):
     assert response['status'] == 'accepted', repr(response)
 
 
+@then(u'I should receive a "Rejected" response')
+def assert_response(context):
+    response = context.response
+    status_code = response.status_code
+    assert status_code == HTTPStatus.PRECONDITION_FAILED.value, \
+        f'Expected status code to be 412; got {status_code}'
+
+    response = context.response.get_json()
+    assert response['status'] == 'Precondition Failed', repr(response)
+
+
 @then('a "{tx_type}" request should have been published for account "{account}" with amount {amount:d}')  # noqa
 def assert_transaction_event_published(context, tx_type, account, amount):
     events = context.broker
